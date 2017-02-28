@@ -115,6 +115,8 @@ class Dfinder : public edm::EDAnalyzer
         TTree* ntD5; 
         TTree* ntD6; 
         TTree* ntD7; 
+///////////////I add one line///////
+        TTtee* ntD8;
         TTree* ntGen;
 
         //histograms
@@ -135,16 +137,21 @@ void Dfinder::beginJob()
     ntD5 = fs->make<TTree>("ntDD0kpipi","");       Dntuple->buildDBranch(ntD5);
     ntD6 = fs->make<TTree>("ntDD0kpipipipi","");   Dntuple->buildDBranch(ntD6);
     ntD7 = fs->make<TTree>("ntBptoD0pi","");       Dntuple->buildDBranch(ntD7);
+/////////////I add one line/////
+    ntD8 = fs->make<TTree>("ntLambdaCtoLambdapi","");  Dntuple->buildDBranch(ntD8);
     ntGen = fs->make<TTree>("ntGen","");           Dntuple->buildGenBranch(ntGen);
     EvtInfo.regTree(root);
     VtxInfo.regTree(root);
     TrackInfo.regTree(root, detailMode_);
     DInfo.regTree(root, detailMode_);
     GenInfo.regTree(root);
+
+
 }//}}}
 
 Dfinder::Dfinder(const edm::ParameterSet& iConfig):theConfig(iConfig)
 {//{{{
+
     //now do what ever initialization is needed
     detailMode_ = iConfig.getParameter<bool>("detailMode");
     dropUnusedTracks_ = iConfig.getParameter<bool>("dropUnusedTracks");
@@ -181,12 +188,14 @@ Dfinder::Dfinder(const edm::ParameterSet& iConfig):theConfig(iConfig)
         TH1F* DMassCutLevel_temp      = fs->make<TH1F>(TString::Format("DMassCutLevel_i")   ,TString::Format("DMassCutLevel_i")  , 10, 0, 10);
         DMassCutLevel.push_back(DMassCutLevel_temp);
     }
+
 }//}}}
 
 Dfinder::~Dfinder()
 {//{{{
    // do anything here that needs to be done at desctruction time
    // (e.g. close files, deallocate resources etc.)
+
 }//}}}
 
 //
@@ -260,6 +269,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         for(unsigned int i=0; i<TrgNames.size(); i++){
             EvtInfo.hltBits[i] = (TrgResultsHandle->accept(i) == true) ? 1:0;
         }
+
     }//end(!with_TriggerResults)}}}
     */
 
@@ -383,6 +393,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         EvtInfo.nBX = 0;
     }
 
+
     //}}}
     //printf("-----*****DEBUG:End of EvtInfo.\n");
 
@@ -450,10 +461,12 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         isNeededTrack[tk_it-input_tracks.begin()] = true;
                         isNeededTrackIdx.push_back(tk_it-input_tracks.begin());
                         PassedTrk++;
+
                     }//end of track preselection}}}
                     //printf("-----*****DEBUG:End of track preselection.\n");
                     std::cout<<"PassedTrk: "<<PassedTrk<<std::endl;
                     
+
                     // DInfo section{{{
                     //////////////////////////////////////////////////////////////////////////
                     // RECONSTRUCTION: K+pi-
@@ -732,11 +745,49 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         PermuVec = DelDuplicate(PermuVec);
                         Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, bplus_mass_window, InVec, D0_MASS, 0.1, false, true, 14, 1);
                     }
+                  //////////////////////////////////////////////////////////////////////////
+                  //RECONSTRUCTION: lambda(p+pi-)pi+
+                  //////////////////////////////////////////////////////////////////////////
+                  float lambdaC_masss_window[2] = { , };///I have not contained the mass value for lambdaC
+                  if(Dchannel_[14] == 1){
+                        std::vector< std::vector< std::pair<float, int> > > PermuVec;
+                        std::vector< std::pair<float, int> > InVec;
+                        std::pair<float, int> tk1 = std::make_pair(PROTON_MASS, 1);
+                        std::pair<float, int> tk2 = std::make_pair(-PION_MASS, 1);
+                        std::pair<float, int> tk3 = std::make_pair(PION_MASS, 0);
+                        InVec.push_back(tk1);
+                        InVec.push_back(tk2);
+                        InVec.push_back(tk3);
+                        PermuVec = GetPermu(InVec);
+                        PermuVec = DelDuplicate(PermuVec);
+                        Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, dstar_mass_window, InVec, lambda_MASS, 0.1, false, true, 15, 1);
+
+                     }
+                  ////////////////////////////////////////////////////////////////////////
+                  //RECONSTRUCTION: lambdabar(pbar-pi+)pi-
+                  ////////////////////////////////////////////////////////////////////////
+                  if(Dchannel_[15] == 1){
+                        std::vector< std::vector< std::pair<float, int> > > PermuVec;
+                        std::vector< std::pair<float, int> > InVec;
+                        std::pair<float, int> tk1 = std::make_pair(-PROTON_MASS, 1);
+                        std::pair<float, int> tk2 = std::make_pair(PION_MASS, 1);
+                        std::pair<float, int> tk3 = std::make_pair(-PION_MASS, 0);
+                        InVec.push_back(tk1);
+                        InVec.push_back(tk2);
+                        InVec.push_back(tk3);
+                        PermuVec = GetPermu(InVec);
+                        PermuVec = DelDuplicate(PermuVec);
+                        Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, dstar_mass_window, InVec, lambda_MASS, 0.1, false, true, 16, 1);
+                        //here I have to double check with the previous BracnchOutNTk function to identity the values's meaning.                                                                    
+                      }
+
+
 
                     printf("D_counter: ");
                     for(unsigned int i = 0; i < Dchannel_.size(); i++){
                         printf("%d/", D_counter[i]);
                     }
+
                     printf("\n");//}}}
                     //printf("-----*****DEBUG:End of DInfo.\n");
 
@@ -858,11 +909,15 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                             DInfo.tktkRes_rftk4_index[listOfRelativeDResCand4[iCands]-1] = TrackInfo.size;
                         }
                         TrackInfo.size++;
+
+
                     }//end of TrackInfo}}}
                     //printf("-----*****DEBUG:End of TrackInfo.\n");
                 }//has nTracks>1
             }//if no Tracks
         }//if no Muons
+
+
 
         // GenInfo section{{{
         if (!iEvent.isRealData() && RunOnMC_){
@@ -1090,8 +1145,11 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         isDchannel[11] = 1;
         isDchannel[12] = 1; //B+(D0(k-pi+)pi+)
         isDchannel[13] = 1; //B-(D0(k-pi+)pi-)
+        isDchannel[14] = 1; //lambdaC(lambda(p+pi-))pi+
+        isDchannel[15] = 1; //lambdaC(lambda(pbar-pi+))pi-
+
         bool REAL = ((!iEvent.isRealData() && RunOnMC_) ? false:true);
-        Dntuple->makeDNtuple(isDchannel, REAL, doDntupleSkim_, &EvtInfo, &VtxInfo, &TrackInfo, &DInfo, &GenInfo, ntD1, ntD2, ntD3, ntD4, ntD5, ntD6, ntD7);
+        Dntuple->makeDNtuple(isDchannel, REAL, doDntupleSkim_, &EvtInfo, &VtxInfo, &TrackInfo, &DInfo, &GenInfo, ntD1, ntD2, ntD3, ntD4, ntD5, ntD6, ntD7,ntD8);
         if(!REAL) Dntuple->fillDGenTree(ntGen, &GenInfo);
     }
 
@@ -1130,6 +1188,7 @@ void Dfinder::fillDescriptions(edm::ConfigurationDescriptions& descriptions)
     edm::ParameterSetDescription desc;
     desc.setUnknown();
     descriptions.addDefault(desc);
+
 }//}}}
 
 //Functions{{{
@@ -1502,7 +1561,10 @@ void Dfinder::TkCombinationResFast(
     //std::cout<<"TkCombinationResFast, selectedTkhidxSet.size: "<<selectedTkhidxSet.size()<<std::endl;
 	return;
 }
+
 //}}}
+
+
 
 //BranchOutNTk{{{
 void Dfinder::BranchOutNTk(//input 2~4 tracks
