@@ -71,6 +71,8 @@
 #define BPLUS_MASS 5.27931
 #define BZERO_MASS 5.27962
 #define BSUBS_MASS 5.36682
+#define LAMBDAC_MASS 2.286
+#define LAMBDA_MASS 1.115
 
 #define MUON_PDGID 13
 #define PION_PDGID 211
@@ -85,6 +87,9 @@
 #define DPLUS_PDGID 411
 #define DSUBS_PDGID 431
 #define DSTAR_PDGID 413
+#define PROTON_PDGID 2212
+#define LAMBDAC_PDGID 4122
+#define LAMBDA_PDGID 3122
 
 class EvtInfoBranches{ //{{{
 	public:
@@ -174,6 +179,7 @@ class EvtInfoBranches{ //{{{
   		    root->Branch("EvtInfo.BSWidthY"     , &BSWidthY                  , "EvtInfo.BSWidthY/F"		);
   		    root->Branch("EvtInfo.BSWidthYErr"  , &BSWidthYErr               , "EvtInfo.BSWidthYErr/F"	);
 			//root->Branch("EvtInfo.PVc2p"      , &PVc2p                     , "EvtInfo.PVc2p/F"			);//
+
 		}//}}}
 
     	void setbranchadd(TTree *root){ //{{{
@@ -219,6 +225,7 @@ class EvtInfoBranches{ //{{{
             root->SetBranchAddress("EvtInfo.BSWidthY"       ,&BSWidthY  );
             root->SetBranchAddress("EvtInfo.BSWidthYErr"    ,&BSWidthYErr  );
             //root->SetBranchAddress("EvtInfo.PVc2p"    ,&PVc2p	);
+
         } //}}}
 }; //}}}
 
@@ -246,6 +253,7 @@ class VtxInfoBranches { //{{{
 			root->Branch("VtxInfo.x"	    , &x[0]	       , "VtxInfo.x[VtxInfo.Size]/F"	    );
 			root->Branch("VtxInfo.y"	    , &y[0]	       , "VtxInfo.y[VtxInfo.Size]/F"	    );
 			root->Branch("VtxInfo.z"	    , &z[0]	       , "VtxInfo.z[VtxInfo.Size]/F"	    );
+
 		} //}}}
 	    
 		void setbranchadd(TTree *root) { //{{{
@@ -259,7 +267,9 @@ class VtxInfoBranches { //{{{
 			root->SetBranchAddress("VtxInfo.x"        , &x[0]  	 );
 			root->SetBranchAddress("VtxInfo.y"        , &y[0]  	 );
 			root->SetBranchAddress("VtxInfo.z"        , &z[0]  	 );
+
 		} //}}}		    
+
 };//}}}
 
  class MuonInfoBranches{//{{{
@@ -410,7 +420,9 @@ class VtxInfoBranches { //{{{
                 root->Branch("MuonInfo.innerTrackisNonnull" ,innerTrackisNonnull, "MuonInfo.innerTrackisNonnull[MuonInfo.size]/O");
                 root->Branch("MuonInfo.globalTrackisNonnull" ,globalTrackisNonnull, "MuonInfo.globalTrackisNonnull[MuonInfo.size]/O");
             }
+
         }//}}}
+
 
         void setbranchadd(TTree *root, bool detailMode = false){//{{{
             root->SetBranchAddress("MuonInfo.size"          , &size          );
@@ -488,6 +500,7 @@ class VtxInfoBranches { //{{{
                 root->SetBranchAddress("MuonInfo.globalTrackisNonnull"    , globalTrackisNonnull);
             }
         }//}}}
+
 };//}}}
 
 class TrackInfoBranches{//{{{
@@ -521,6 +534,7 @@ class TrackInfoBranches{//{{{
         float   trkMVAVal    [ MAX_TRACK];
         int     trkAlgo      [ MAX_TRACK];
         int   originalTrkAlgo[ MAX_TRACK];
+
 
         void regTree(TTree *root, bool detailMode = false){//{{{
             root->Branch("TrackInfo.size"           ,&size		    ,"TrackInfo.size/I"			);
@@ -588,7 +602,9 @@ class TrackInfoBranches{//{{{
 
             if(detailMode){
             }
+
         }//}}}
+
 };//}}}
 
 class BInfoBranches{//{{{

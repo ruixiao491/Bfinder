@@ -1241,11 +1241,11 @@ class DntupleBranches
     else if(DInfo->type[j]==9||DInfo->type[j]==10||DInfo->type[j]==11||DInfo->type[j]==12) DpdgId=DSTAR_PDGID;
     else if(DInfo->type[j]==13||DInfo->type[j]==14) DpdgId=BPLUS_PDGID;
 ///////I add the following line
-    else if(DInfo->type[j]==15||DInfo->type[j]==16) DpdgId=LAMBDAC;
+    else if(DInfo->type[j]==15||DInfo->type[j]==16) DpdgId=LAMBDAC_PDGID;
     if(DInfo->type[j]==7||DInfo->type[j]==8) RpdgId=PHI_PDGID;
     else if(DInfo->type[j]==9||DInfo->type[j]==10||DInfo->type[j]==11||DInfo->type[j]==12||DInfo->type[j]==13||DInfo->type[j]==14) RpdgId=DZERO_PDGID;
 //////I add oen line here
-    else if(DInfo->type[j]==15||DInfo->type[j]==16) RpdgId=LAMBDA;
+    else if(DInfo->type[j]==15||DInfo->type[j]==16) RpdgId=LAMBDA_PDGID;
     Dgen[typesize] = 0;//gen init
     DgenIndex[typesize] = -1;
     DgennDa[typesize] = -1;

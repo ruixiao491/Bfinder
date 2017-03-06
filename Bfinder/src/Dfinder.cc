@@ -116,7 +116,7 @@ class Dfinder : public edm::EDAnalyzer
         TTree* ntD6; 
         TTree* ntD7; 
 ///////////////I add one line///////
-        TTtee* ntD8;
+        TTree* ntD8;
         TTree* ntGen;
 
         //histograms
@@ -748,7 +748,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                   //////////////////////////////////////////////////////////////////////////
                   //RECONSTRUCTION: lambda(p+pi-)pi+
                   //////////////////////////////////////////////////////////////////////////
-                  float lambdaC_masss_window[2] = { , };///I have not contained the mass value for lambdaC
+                  float lambdaC_mass_window[2] = {LAMBDAC_MASS-0.3,LAMBDAC_MASS+0.3};///I have not contained the mass value for lambdaC
                   if(Dchannel_[14] == 1){
                         std::vector< std::vector< std::pair<float, int> > > PermuVec;
                         std::vector< std::pair<float, int> > InVec;
@@ -760,7 +760,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         InVec.push_back(tk3);
                         PermuVec = GetPermu(InVec);
                         PermuVec = DelDuplicate(PermuVec);
-                        Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, dstar_mass_window, InVec, lambda_MASS, 0.1, false, true, 15, 1);
+                        Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, lambdaC_mass_window, InVec, LAMBDA_MASS, 0.1, false, true, 15, 1);
 
                      }
                   ////////////////////////////////////////////////////////////////////////
@@ -777,7 +777,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         InVec.push_back(tk3);
                         PermuVec = GetPermu(InVec);
                         PermuVec = DelDuplicate(PermuVec);
-                        Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, dstar_mass_window, InVec, lambda_MASS, 0.1, false, true, 16, 1);
+                        Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, lambdaC_mass_window, InVec, LAMBDA_MASS, 0.1, false, true, 16, 1);
                         //here I have to double check with the previous BracnchOutNTk function to identity the values's meaning.                                                                    
                       }
 
@@ -787,6 +787,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     for(unsigned int i = 0; i < Dchannel_.size(); i++){
                         printf("%d/", D_counter[i]);
                     }
+
 
                     printf("\n");//}}}
                     //printf("-----*****DEBUG:End of DInfo.\n");
@@ -1130,7 +1131,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  
     //Made a Dntuple on the fly   
     if(makeDntuple_){
-        int isDchannel[14];
+        int isDchannel[16];
         isDchannel[0] = 1; //k+pi-
         isDchannel[1] = 1; //k-pi+
         isDchannel[2] = 1; //k-pi+pi+
