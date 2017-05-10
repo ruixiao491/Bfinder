@@ -78,6 +78,9 @@ class Bfinder : public edm::EDAnalyzer
         edm::EDGetTokenT< std::vector<PileupSummaryInfo> > puInfoLabel_;
         edm::EDGetTokenT< reco::BeamSpot > bsLabel_;
         edm::EDGetTokenT< reco::VertexCollection > pvLabel_;
+        edm::EDGetTokenT<edm::ValueMap<reco::DeDxData> > Dedx_Token1_;
+        edm::EDGetTokenT<edm::ValueMap<reco::DeDxData> > Dedx_Token2_;
+
         double tkPtCut_;
         double tkEtaCut_;
         double jpsiPtCut_;
@@ -93,7 +96,11 @@ class Bfinder : public edm::EDAnalyzer
         bool doMuPreCut_;
         bool makeBntuple_;
         bool doBntupleSkim_;
-        std::string MVAMapLabel_;
+        bool printInfo_;
+        bool readDedx_;
+        edm::EDGetTokenT<edm::ValueMap<float> > MVAMapLabel_;
+        edm::EDGetTokenT< std::vector<float> > MVAMapLabelpA_;
+        edm::InputTag MVAMapLabelInputTag_;
 
         edm::Service<TFileService> fs;
         TTree *root;
@@ -111,6 +118,7 @@ class Bfinder : public edm::EDAnalyzer
         TTree* nt3;
         TTree* nt5;
         TTree* nt6;
+        TTree* nt7;
         TTree* ntGen;
 
         //histograms
@@ -132,6 +140,7 @@ void Bfinder::beginJob()
     nt3   = fs->make<TTree>("ntKstar","");  Bntuple->buildBranch(nt3);
     nt5   = fs->make<TTree>("ntphi","");    Bntuple->buildBranch(nt5);
     nt6   = fs->make<TTree>("ntmix","");    Bntuple->buildBranch(nt6);
+    nt7   = fs->make<TTree>("ntJpsi","");    Bntuple->buildBranch(nt7,true);
     ntGen = fs->make<TTree>("ntGen","");    Bntuple->buildGenBranch(ntGen);
     EvtInfo.regTree(root);
     VtxInfo.regTree(root);
@@ -174,7 +183,13 @@ Bfinder::Bfinder(const edm::ParameterSet& iConfig):theConfig(iConfig)
     doMuPreCut_ = iConfig.getParameter<bool>("doMuPreCut");
     makeBntuple_ = iConfig.getParameter<bool>("makeBntuple");
     doBntupleSkim_ = iConfig.getParameter<bool>("doBntupleSkim");
-    MVAMapLabel_  = iConfig.getParameter<std::string>("MVAMapLabel");
+    printInfo_ = iConfig.getParameter<bool>("printInfo");
+    readDedx_ = iConfig.getParameter<bool>("readDedx");
+    MVAMapLabelInputTag_ = iConfig.getParameter<edm::InputTag>("MVAMapLabel");
+    MVAMapLabel_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("MVAMapLabel"));
+    MVAMapLabelpA_ = consumes< std::vector<float> >(iConfig.getParameter<edm::InputTag>("MVAMapLabel"));
+    Dedx_Token1_ = consumes<edm::ValueMap<reco::DeDxData> >(iConfig.getParameter<edm::InputTag>("Dedx_Token1"));
+    Dedx_Token2_ = consumes<edm::ValueMap<reco::DeDxData> >(iConfig.getParameter<edm::InputTag>("Dedx_Token2"));
 
     MuonCutLevel        = fs->make<TH1F>("MuonCutLevel"     , "MuonCutLevel"    , 10, 0, 10);
     TrackCutLevel       = fs->make<TH1F>("TrackCutLevel"    , "TrackCutLevel"   , 10, 0, 10);
@@ -419,13 +434,13 @@ void Bfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         memset(genTrackPtr,0x00,MAX_GEN);
         //standard check for validity of input data
         if (input_muons.size() == 0){
-            std::cout << "There's no muon : " << iEvent.id() << std::endl;
+            if (printInfo_) std::cout << "There's no muon : " << iEvent.id() << std::endl;
         }else{
-            std::cout << "Got " << input_muons.size() << " muons / ";
+            if (printInfo_) std::cout << "Got " << input_muons.size() << " muons / ";
             if (input_tracks.size() == 0){
-                std::cout << "There's no track: " << iEvent.id() << std::endl;
+                if (printInfo_) std::cout << "There's no track: " << iEvent.id() << std::endl;
             }else{
-                std::cout << "Got " << input_tracks.size() << " tracks" << std::endl;
+                if (printInfo_) std::cout << "Got " << input_tracks.size() << " tracks" << std::endl;
                 if (input_tracks.size() > 0 && input_muons.size() > 1){
 
                     //MuonInfo section{{{
@@ -701,7 +716,7 @@ void Bfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         isNeededTrack[tk_it-input_tracks.begin()] = true;
                         PassedTrk++;
                     }//end of track preselection}}}
-                    //std::cout<<"PassedTrk: "<<PassedTrk<<std::endl;
+                    if(printInfo_) std::cout<<"PassedTrk: "<<PassedTrk<<std::endl;                    
                     //printf("-----*****DEBUG:End of track preselection.\n");
 
                     // BInfo section{{{
@@ -1029,16 +1044,41 @@ void Bfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                             
                         }//Mu2
                     }//Mu1
-                    printf("B_counter: ");
-                    for(unsigned int i = 0; i < Bchannel_.size(); i++){
-                        printf("%d/", B_counter[i]);
-                    }
-                    printf("\n");//}}}
+                    if(printInfo_){
+                        printf("B_counter: ");
+                        for(unsigned int i = 0; i < Bchannel_.size(); i++){
+                            printf("%d/", B_counter[i]);
+                        }
+                        printf("\n");
+                    }//}}}
                     //printf("-----*****DEBUG:End of BInfo.\n");
 
                     // TrackInfo section {{{
+                    // Setup MVA
                     Handle<edm::ValueMap<float> > mvaoutput;
-                    iEvent.getByLabel(MVAMapLabel_, "MVAVals", mvaoutput);
+                    Handle< std::vector<float> > mvaoutputpA;
+                    std::vector<float>   mvavector;
+                    if(MVAMapLabelInputTag_.instance() == "MVAVals") {
+                        iEvent.getByToken(MVAMapLabel_, mvaoutput);
+                    }
+                    if(MVAMapLabelInputTag_.instance() == "MVAValues") {
+                        iEvent.getByToken(MVAMapLabelpA_, mvaoutputpA);
+                        mvavector = *mvaoutputpA;
+                        assert(mvavector.size()==input_tracks.size());
+                    }
+
+                    // Setup Dedx
+                    edm::Handle<edm::ValueMap<reco::DeDxData> > dEdxHandle1;
+                    edm::ValueMap<reco::DeDxData> dEdxTrack1;
+                    //edm::Handle<edm::ValueMap<reco::DeDxData> > dEdxHandle2;
+                    //edm::ValueMap<reco::DeDxData> dEdxTrack2;
+                    if(readDedx_) {
+                        iEvent.getByToken(Dedx_Token1_, dEdxHandle1);
+                        dEdxTrack1 = *dEdxHandle1.product();
+                        //iEvent.getByToken(Dedx_Token2_, dEdxHandle2);
+                        //dEdxTrack2 = *dEdxHandle2.product();
+                    }
+
                     for(std::vector<pat::GenericParticle>::const_iterator tk_it=input_tracks.begin();
                         tk_it != input_tracks.end() ; tk_it++){
                         int tk_hindex = int(tk_it - input_tracks.begin());
@@ -1085,10 +1125,16 @@ void Bfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         TrackInfo.dxyPV          [TrackInfo.size] = tk_it->track()->dxy(RefVtx);
                         TrackInfo.highPurity     [TrackInfo.size] = tk_it->track()->quality(reco::TrackBase::highPurity);
                         TrackInfo.geninfo_index  [TrackInfo.size] = -1;//initialize for later use
+                        if(MVAMapLabelInputTag_.instance() == "MVAVals")
                         TrackInfo.trkMVAVal      [TrackInfo.size] = (*mvaoutput)[tk_it->track()];
+                        if(MVAMapLabelInputTag_.instance() == "MVAValues")
+                        TrackInfo.trkMVAVal      [TrackInfo.size] = mvavector[tk_hindex];
                         TrackInfo.trkAlgo        [TrackInfo.size] = tk_it->track()->algo();
                         TrackInfo.originalTrkAlgo[TrackInfo.size] = tk_it->track()->originalAlgo();
-
+                        if(readDedx_) {
+                            TrackInfo.dedx           [TrackInfo.size] = dEdxTrack1[tk_it->track()].dEdx();
+                        }else
+                            TrackInfo.dedx           [TrackInfo.size] = -1;
 
                         //https://github.com/cms-sw/cmssw/blob/CMSSW_7_5_5_patch1/DataFormats/TrackReco/interface/TrackBase.h#L149
                         if(tk_it->track().isNonnull()){
@@ -1201,6 +1247,7 @@ void Bfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 GenInfo.mass[GenInfo.size]          = it_gen->mass();
                 GenInfo.pdgId[GenInfo.size]         = it_gen->pdgId();
                 GenInfo.status[GenInfo.size]        = it_gen->status();
+                GenInfo.collisionId[GenInfo.size]   = it_gen->collisionId();
                 GenInfo.nMo[GenInfo.size]           = it_gen->numberOfMothers();
                 GenInfo.nDa[GenInfo.size]           = it_gen->numberOfDaughters();
                 GenInfo.mo1[GenInfo.size]           = -1;//To be matched later.
@@ -1255,7 +1302,7 @@ void Bfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     
     //Made a Bntuple on the fly
     if(makeBntuple_){
-        int ifchannel[7];
+        int ifchannel[8];
         ifchannel[0] = 1; //jpsi+Kp
         ifchannel[1] = 1; //jpsi+pi
         ifchannel[2] = 1; //jpsi+Ks(pi+,pi-)
@@ -1263,8 +1310,9 @@ void Bfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         ifchannel[4] = 1; //jpsi+K*(K-,pi+)
         ifchannel[5] = 1; //jpsi+phi(K+,K-)
         ifchannel[6] = 1; //jpsi+pi pi <= psi', X(3872), Bs->J/psi f0
+        ifchannel[7] = 1; //inclusive jpsi
         bool REAL = ((!iEvent.isRealData() && RunOnMC_) ? false:true);
-        Bntuple->makeNtuple(ifchannel, REAL, doBntupleSkim_, &EvtInfo, &VtxInfo, &MuonInfo, &TrackInfo, &BInfo, &GenInfo, nt0, nt1, nt2, nt3, nt5, nt6);
+        Bntuple->makeNtuple(ifchannel, REAL, doBntupleSkim_, &EvtInfo, &VtxInfo, &MuonInfo, &TrackInfo, &BInfo, &GenInfo, nt0, nt1, nt2, nt3, nt5, nt6, nt7);
         if(!REAL) Bntuple->fillGenTree(ntGen, &GenInfo);
     }
 }
@@ -1403,8 +1451,9 @@ void Bfinder::BranchOut2MuTk(
                              xCands[2]->currentState().kinematicParameters().energy());
       
       BInfo.index[BInfo.size]   = BInfo.size;
-      BInfo.mass[BInfo.size]    = xb_4vec.Mag();
       BInfo.unfitted_mass[BInfo.size] = (v4_mu1+v4_mu2+v4_tk1).Mag();
+      BInfo.unfitted_pt[BInfo.size] = (v4_mu1+v4_mu2+v4_tk1).Pt();
+      BInfo.mass[BInfo.size]    = xb_4vec.Mag();
       BInfo.pt[BInfo.size]    = xb_4vec.Pt();
       BInfo.eta[BInfo.size]    = xb_4vec.Eta();
       BInfo.phi[BInfo.size]    = xb_4vec.Phi();
@@ -1661,6 +1710,7 @@ void Bfinder::BranchOut2MuX_XtoTkTk(
             BInfo.index[BInfo.size]   = BInfo.size;
             BInfo.mass[BInfo.size]    = xb_4vec.Mag();
             BInfo.unfitted_mass[BInfo.size] = (v4_mu1+v4_mu2+v4_tk1+v4_tk2).Mag();
+            BInfo.unfitted_pt[BInfo.size] = (v4_mu1+v4_mu2+v4_tk1+v4_tk2).Pt();
             BInfo.pt[BInfo.size]    = xb_4vec.Pt();
             BInfo.eta[BInfo.size]    = xb_4vec.Eta();
             BInfo.phi[BInfo.size]    = xb_4vec.Phi();
@@ -1718,6 +1768,7 @@ void Bfinder::BranchOut2MuX_XtoTkTk(
             
             //tktk fit info
             BInfo.tktk_unfitted_mass[BInfo.size]    = (v4_tk1+v4_tk2).Mag();
+            BInfo.tktk_unfitted_pt[BInfo.size]    = (v4_tk1+v4_tk2).Pt();
             if(tktk_VFT->isValid() && tktk_VFPvtx->vertexIsValid()){
                 std::vector<RefCountedKinematicParticle> tktkCands  = tktk_VFT->finalStateParticles();
                 tktk_4vec.SetPxPyPzE(tktk_VFP->currentState().kinematicParameters().momentum().x(),
