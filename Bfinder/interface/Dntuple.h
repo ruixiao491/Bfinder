@@ -595,8 +595,9 @@ class DntupleBranches
     nt->Branch("GRestk4phi",GRestk4phi,"GRestk4phi[Gsize]/F");
   }
   
-  void makeDNtuple(int isDchannel[], bool REAL, bool skim, EvtInfoBranches *EvtInfo, VtxInfoBranches *VtxInfo, TrackInfoBranches *TrackInfo, DInfoBranches *DInfo, GenInfoBranches *GenInfo, TTree* ntD1, TTree* ntD2, TTree* ntD3, TTree* ntD4, TTree* ntD5, TTree* ntD6, TTree* ntD7)
+  void makeDNtuple(int isDchannel[], bool REAL, bool skim, EvtInfoBranches *EvtInfo, VtxInfoBranches *VtxInfo, TrackInfoBranches *TrackInfo, DInfoBranches *DInfo, GenInfoBranches *GenInfo, TTree* ntD1, TTree* ntD2, TTree* ntD3, TTree* ntD4, TTree* ntD5, TTree* ntD6, TTree* ntD7, TTree* ntD8)
   {//{{{
+
     TVector3* bP = new TVector3;
     TVector3* bVtx = new TVector3;
     TLorentzVector* b4P = new TLorentzVector;
@@ -637,8 +638,10 @@ class DntupleBranches
             else if(t==9)  ntD5->Fill();
             else if(t==11) ntD6->Fill();
             else if(t==13) ntD7->Fill();
+            else if(t==15) ntD8->Fill();
           }
       }
+
   }//}}}
   
   void fillDGenTree(TTree* ntGen, GenInfoBranches *GenInfo, bool gskim=true)
@@ -656,8 +659,10 @@ class DntupleBranches
         if(TMath::Abs(GenInfo->pdgId[j])!=DZERO_PDGID&&
            TMath::Abs(GenInfo->pdgId[j])!=DPLUS_PDGID&&
            TMath::Abs(GenInfo->pdgId[j])!=DSUBS_PDGID&&
-           TMath::Abs(GenInfo->pdgId[j])!=DSTAR_PDGID&& 
+           TMath::Abs(GenInfo->pdgId[j])!=DSTAR_PDGID&&
+           TMath::Abs(GenInfo->pdgId[j])!=LAMBDAC_PDGID&& 
            TMath::Abs(GenInfo->pdgId[j])!=BPLUS_PDGID&&gskim) continue;
+          
         Gsize = gsize+1;
         Gpt[gsize] = GenInfo->pt[j];
         Geta[gsize] = GenInfo->eta[j];
@@ -674,7 +679,8 @@ class DntupleBranches
         bGen->SetPtEtaPhiM(GenInfo->pt[j],GenInfo->eta[j],GenInfo->phi[j],GenInfo->mass[j]);
         Gy[gsize] = bGen->Rapidity();
         sigtype=0;
-        for(gt=1;gt<15;gt++)
+//        for(gt=1;gt<15;gt++)
+          for(gt=1;gt<17;gt++)
           {
             if(isDsignalGen(gt,j,GenInfo))
               {
@@ -726,7 +732,9 @@ class DntupleBranches
         GRestk4eta[gsize] = -20;
         GRestk4phi[gsize] = -20;
         GRestk4y[gsize] = -1;
-        if(GisSignal[gsize]==1||GisSignal[gsize]==2||GisSignal[gsize]==3||GisSignal[gsize]==4||GisSignal[gsize]==5||GisSignal[gsize]==6)
+//for the new channel is decay from the same vertex, so I change line to the following lines.
+//        if(GisSignal[gsize]==1||GisSignal[gsize]==2||GisSignal[gsize]==3||GisSignal[gsize]==4||GisSignal[gsize]==5||GisSignal[gsize]==6)
+        if(GisSignal[gsize]==1||GisSignal[gsize]==2||GisSignal[gsize]==3||GisSignal[gsize]==4||GisSignal[gsize]==5||GisSignal[gsize]==6||GisSignal[gsize]==15||GisSignal[gsize]==16)
           {
 			GdecayvtxX[gsize] = GenInfo->vtxX[GenInfo->da1[j]];//all daughers should be from the same vertex, can be double checked here
 			GdecayvtxY[gsize] = GenInfo->vtxY[GenInfo->da1[j]];
@@ -741,7 +749,7 @@ class DntupleBranches
             Gtk2phi[gsize] = GenInfo->phi[GenInfo->da2[j]];
             bGen->SetPtEtaPhiM(GenInfo->pt[GenInfo->da2[j]],GenInfo->eta[GenInfo->da2[j]],GenInfo->phi[GenInfo->da2[j]],GenInfo->mass[GenInfo->da2[j]]);
             Gtk2y[gsize] = bGen->Rapidity();
-            if(GisSignal[gsize]==3||GisSignal[gsize]==4||GisSignal[gsize]==5||GisSignal[gsize]==6)
+            if(GisSignal[gsize]==3||GisSignal[gsize]==4||GisSignal[gsize]==5||GisSignal[gsize]==6||GisSignal[gsize]==15||GisSignal[gsize]==16)
               {
                 Gtk3pt[gsize] = GenInfo->pt[GenInfo->da3[j]];
                 Gtk3eta[gsize] = GenInfo->eta[GenInfo->da3[j]];
@@ -801,6 +809,7 @@ class DntupleBranches
   {
     if(TMath::Abs(particlePdgId)==211) return PION_MASS;
     if(TMath::Abs(particlePdgId)==321) return KAON_MASS;
+    if(TMath::Abs(particlePdgId)==2212) return PROTON_MASS;
     else
       {
         cout<<"ERROR: find particle mass falied >> Particle pdgId: "<<particlePdgId<<endl;
@@ -812,6 +821,7 @@ class DntupleBranches
   {
     if(TMath::Abs(tkmass-KAON_MASS)<0.1) return KAON_PDGID;
     else if(TMath::Abs(tkmass-PION_MASS)<0.1) return PION_PDGID;
+    else if(TMath::Abs(tkmass-PROTON_MASS)<0.1) return PROTON_PDGID;
     else
       {
         cout<<"ERROR: find particle pdgid falied >> Particle mass: "<<tkmass<<endl;
@@ -904,7 +914,7 @@ class DntupleBranches
 
     //DInfo.trkInfo
     float trk1mass,trk2mass,trk3mass,trk4mass;
-    if(DInfo->type[j]==1||DInfo->type[j]==2||DInfo->type[j]==3||DInfo->type[j]==4||DInfo->type[j]==5||DInfo->type[j]==6)
+    if(DInfo->type[j]==1||DInfo->type[j]==2||DInfo->type[j]==3||DInfo->type[j]==4||DInfo->type[j]==5||DInfo->type[j]==6||DInfo->type[j]==15||DInfo->type[j]==16)
       {
         Dtrk1Idx[typesize] = DInfo->rftk1_index[j];
         Dtrk1Pt[typesize] = TrackInfo->pt[DInfo->rftk1_index[j]];
@@ -1061,7 +1071,7 @@ class DntupleBranches
             DRestrk3dedx[typesize] = -20;
             DRestrk4dedx[typesize] = -20;
           }
-        else if(DInfo->type[j]==3||DInfo->type[j]==4)
+        else if(DInfo->type[j]==3||DInfo->type[j]==4||DInfo->type[j]==15||DInfo->type[j]==16)
           {
             Dtrk3Idx[typesize] = DInfo->rftk3_index[j];
             Dtrk3Pt[typesize] = TrackInfo->pt[DInfo->rftk3_index[j]];
@@ -1464,6 +1474,7 @@ class DntupleBranches
     else if(DInfo->type[j]==7||DInfo->type[j]==8) DpdgId=DSUBS_PDGID;
     else if(DInfo->type[j]==9||DInfo->type[j]==10||DInfo->type[j]==11||DInfo->type[j]==12) DpdgId=DSTAR_PDGID;
     else if(DInfo->type[j]==13||DInfo->type[j]==14) DpdgId=BPLUS_PDGID;
+    else if(DInfo->type[j]==15||DInfo->type[j]==16) DpdgId=LAMBDAC_PDGID;
     if(DInfo->type[j]==7||DInfo->type[j]==8) RpdgId=PHI_PDGID;
     else if(DInfo->type[j]==9||DInfo->type[j]==10||DInfo->type[j]==11||DInfo->type[j]==12||DInfo->type[j]==13||DInfo->type[j]==14) RpdgId=DZERO_PDGID;
     Dgen[typesize] = 0;//gen init
@@ -1515,7 +1526,7 @@ class DntupleBranches
                   }
               }
           }
-        else if(DInfo->type[j]==3||DInfo->type[j]==4)
+        else if(DInfo->type[j]==3||DInfo->type[j]==4||DInfo->type[j]==15||DInfo->type[j]==16)
           {
             if(DInfo->rftk1_index[j]>-1 && DInfo->rftk2_index[j]>-1 && DInfo->rftk3_index[j]>-1)
               {
@@ -1972,6 +1983,25 @@ class DntupleBranches
           }
       }
     
+    if(dmesontype==15||dmesontype==16)
+      {
+        if(TMath::Abs(GenInfo->pdgId[j])==LAMBDAC_PDGID&&GenInfo->nDa[j]==3&&GenInfo->da1[j]!=-1&&GenInfo->da2[j]!=-1&&GenInfo->da3[j]!=-1)
+          {
+            if((((GenInfo->pdgId[GenInfo->da1[j]]==PION_PDGID&&TMath::Abs(GenInfo->pdgId[GenInfo->da2[j]])==PROTON_PDGID&&TMath::Abs(GenInfo->pdgId[GenInfo->da3[j]])==KAON_PDGID)||
+                 (GenInfo->pdgId[GenInfo->da2[j]]==PION_PDGID&&TMath::Abs(GenInfo->pdgId[GenInfo->da1[j]])==PROTON_PDGID&&TMath::Abs(GenInfo->pdgId[GenInfo->da3[j]])==KAON_PDGID)||
+                 (GenInfo->pdgId[GenInfo->da3[j]]==PION_PDGID&&TMath::Abs(GenInfo->pdgId[GenInfo->da1[j]])==PROTON_PDGID&&TMath::Abs(GenInfo->pdgId[GenInfo->da2[j]])==KAON_PDGID))&&dmesontype==15) ||
+               (((GenInfo->pdgId[GenInfo->da1[j]]==(0-PION_PDGID)&&TMath::Abs(GenInfo->pdgId[GenInfo->da2[j]])==PROTON_PDGID&&TMath::Abs(GenInfo->pdgId[GenInfo->da3[j]])==KAON_PDGID)||
+                 (GenInfo->pdgId[GenInfo->da2[j]]==(0-PION_PDGID)&&TMath::Abs(GenInfo->pdgId[GenInfo->da1[j]])==PROTON_PDGID&&TMath::Abs(GenInfo->pdgId[GenInfo->da3[j]])==KAON_PDGID)||
+                 (GenInfo->pdgId[GenInfo->da3[j]]==(0-PION_PDGID)&&TMath::Abs(GenInfo->pdgId[GenInfo->da1[j]])==PROTON_PDGID&&TMath::Abs(GenInfo->pdgId[GenInfo->da2[j]])==KAON_PDGID))&&dmesontype==16))
+              {
+                flag=true;
+              }
+          }
+      }
+
+
+
+
     return flag;
   }
 

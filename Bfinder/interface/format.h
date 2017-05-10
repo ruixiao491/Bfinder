@@ -71,6 +71,7 @@
 #define BPLUS_MASS 5.27931
 #define BZERO_MASS 5.27962
 #define BSUBS_MASS 5.36682
+#define LAMBDAC_MASS 2.286
 
 #define MUON_PDGID 13
 #define PION_PDGID 211
@@ -85,6 +86,8 @@
 #define DPLUS_PDGID 411
 #define DSUBS_PDGID 431
 #define DSTAR_PDGID 413
+#define PROTON_PDGID 2212
+#define LAMBDAC_PDGID 4122
 
 class EvtInfoBranches{ //{{{
 	public:

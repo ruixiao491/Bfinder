@@ -3,9 +3,9 @@ using namespace std;
 #include "loop.h"
 #include "format.h"
 #include "Dntuple.h"
-
+//here I change the skim option to true.
 Bool_t istest = false;
-int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb=true, Int_t startEntries=0, Int_t endEntries=-1, Bool_t skim=false, Bool_t gskim=true, Bool_t checkMatching=true, Bool_t iseos=false, Bool_t SkimHLTtree=false)
+int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb=true, Int_t startEntries=0, Int_t endEntries=-1, Bool_t skim=true, Bool_t gskim=true, Bool_t checkMatching=true, Bool_t iseos=false, Bool_t SkimHLTtree=false)
 {
   if(istest)
     {
@@ -13,7 +13,7 @@ int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb
       outfile="/data/wangj/testspace/test_Dntuple_pp.root";
       REAL=false;
       isPbPb=false;
-      skim=false;
+      skim=true;
       checkMatching=true;
       iseos=false;
     }
@@ -55,22 +55,24 @@ int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb
   if(endEntries>nentries || endEntries == -1) endEntries = nentries;
   TFile* outf = TFile::Open(Form("%s", outfile.Data()),"recreate");
 
-  int isDchannel[14];
-  isDchannel[0] = 1; //D0(k+pi-)
-  isDchannel[1] = 1; //D0(k-pi+)
-  isDchannel[2] = 1; //D*(D0(k-pi+)pi+)
-  isDchannel[3] = 1; //D*(D0(k+pi-)pi-)
-  isDchannel[4] = 1; //D*(D0(k-pi-pi+pi+)pi+)
-  isDchannel[5] = 1; //D*(D0(k+pi+pi-pi-)pi-)
-  isDchannel[6] = 1; 
-  isDchannel[7] = 1; 
-  isDchannel[8] = 1; 
-  isDchannel[9] = 1; 
-  isDchannel[10] = 1; 
-  isDchannel[11] = 1;
-  isDchannel[12] = 1; //B+(D0(k-pi+)pi+)
-  isDchannel[13] = 1; //B-(D0(k-pi+)pi-)
-
+//  int isDchannel[14];
+  int isDchannel[16];
+  isDchannel[0] = 0; //D0(k+pi-)
+  isDchannel[1] = 0; //D0(k-pi+)
+  isDchannel[2] = 0; //D*(D0(k-pi+)pi+)
+  isDchannel[3] = 0; //D*(D0(k+pi-)pi-)
+  isDchannel[4] = 0; //D*(D0(k-pi-pi+pi+)pi+)
+  isDchannel[5] = 0; //D*(D0(k+pi+pi-pi-)pi-)
+  isDchannel[6] = 0; 
+  isDchannel[7] = 0; 
+  isDchannel[8] = 0; 
+  isDchannel[9] = 0; 
+  isDchannel[10] = 0; 
+  isDchannel[11] = 0;
+  isDchannel[12] = 0; //B+(D0(k-pi+)pi+)
+  isDchannel[13] = 0; //B-(D0(k-pi+)pi-)
+  isDchannel[14] = 1; //lambdaC(p+k-pi+)
+  isDchannel[15] = 1; //lambdaCbar(pbar-k+pi-)
   cout<<"--- Building trees"<<endl;
   bool detailMode = true;
   bool D0kpimode = true;
@@ -82,6 +84,7 @@ int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb
   TTree* ntD5 = new TTree("ntDD0kpipi","");       Dntuple->buildDBranch(ntD5,D0kpimode,detailMode);
   TTree* ntD6 = new TTree("ntDD0kpipipipi","");   Dntuple->buildDBranch(ntD6,D0kpimode,detailMode);
   TTree* ntD7 = new TTree("ntBptoD0pi","");       Dntuple->buildDBranch(ntD7,D0kpimode,detailMode);
+  TTree* ntD8 = new TTree("ntlambdaCtopkpi","");  Dntuple->buildDBranch(ntD8,D0kpimode,detailMode);
   TTree* ntGen = new TTree("ntGen","");           Dntuple->buildGenBranch(ntGen);
   TTree* ntHlt = hltroot->CloneTree(0);
   ntHlt->SetName("ntHlt");
@@ -103,6 +106,8 @@ int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb
       skimroot->GetEntry(i);
       hiroot->GetEntry(i);
       if(i%1000==0) cout<<setw(7)<<i<<" / "<<endEntries<<endl;
+//here I add one line like that in lambdaC to lambda pi channel to remove all the Dsize=0
+      if(DInfo->size==0)continue;
       if(checkMatching)
         {
           if(((int)Df_HLT_Event!=EvtInfo->EvtNo||(int)Df_HLT_Run!=EvtInfo->RunNo||(int)Df_HLT_LumiBlock!=EvtInfo->LumiNo) || 
@@ -118,7 +123,7 @@ int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb
       ntHlt->Fill();
       ntSkim->Fill();
       ntHi->Fill();
-      Dntuple->makeDNtuple(isDchannel, REAL, skim, EvtInfo, VtxInfo, TrackInfo, DInfo, GenInfo, ntD1, ntD2, ntD3, ntD4, ntD5, ntD6, ntD7);
+      Dntuple->makeDNtuple(isDchannel, REAL, skim, EvtInfo, VtxInfo, TrackInfo, DInfo, GenInfo, ntD1, ntD2, ntD3, ntD4, ntD5, ntD6, ntD7, ntD8);
       if(!REAL) Dntuple->fillDGenTree(ntGen, GenInfo, gskim);
     }
   outf->Write();

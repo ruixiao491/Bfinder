@@ -10,7 +10,8 @@
 //
 
 class Dfinder : public edm::EDAnalyzer
-{//{{{
+{//{{
+//{
     public:
         explicit Dfinder(const edm::ParameterSet&);
         ~Dfinder();
@@ -127,6 +128,7 @@ class Dfinder : public edm::EDAnalyzer
         TTree* ntD5; 
         TTree* ntD6; 
         TTree* ntD7; 
+        TTree* ntD8;
         TTree* ntGen;
 
         //histograms
@@ -147,12 +149,14 @@ void Dfinder::beginJob()
     ntD5 = fs->make<TTree>("ntDD0kpipi","");       Dntuple->buildDBranch(ntD5);
     ntD6 = fs->make<TTree>("ntDD0kpipipipi","");   Dntuple->buildDBranch(ntD6);
     ntD7 = fs->make<TTree>("ntBptoD0pi","");       Dntuple->buildDBranch(ntD7);
+    ntD8 = fs->make<TTree>("ntLambdaCtopkpi","");  Dntuple->buildDBranch(ntD8);
     ntGen = fs->make<TTree>("ntGen","");           Dntuple->buildGenBranch(ntGen);
     EvtInfo.regTree(root);
     VtxInfo.regTree(root);
     TrackInfo.regTree(root, detailMode_);
     DInfo.regTree(root, detailMode_);
     GenInfo.regTree(root);
+
 }//}}}
 
 Dfinder::Dfinder(const edm::ParameterSet& iConfig):theConfig(iConfig)
@@ -769,6 +773,52 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         PermuVec = DelDuplicate(PermuVec);
                         Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, bplus_mass_window, InVec, D0_MASS, 0.1, false, true, 14, 1);
                     }
+                   ///////////////////////////////////////////////////////////////////////////
+                   //RECONSTRUCTION: pi+p+k-(for lambda_C)
+                   ///////////////////////////////////////////////////////////////////////////
+                   float lambdaC_mass_window[2] = {LAMBDAC_MASS-0.3,LAMBDAC_MASS+0.3};
+                   if(Dchannel_[14] == 1){
+                        std::vector< std::vector< std::pair<float, int> > > PermuVec;
+                        std::vector< std::pair<float, int> > InVec;
+                        std::pair<float, int> tk1 = std::make_pair(+PION_MASS, 0);
+                        std::pair<float, int> tk2 = std::make_pair(+PROTON_MASS, 0);
+                        std::pair<float, int> tk3 = std::make_pair(-KAON_MASS, 0);
+                        InVec.push_back(tk1);
+                        InVec.push_back(tk2);
+                        InVec.push_back(tk3);
+                        PermuVec = GetPermu(InVec);
+                        PermuVec = DelDuplicate(PermuVec);
+                        for(unsigned int i = 0; i < PermuVec.size(); i++){
+                            Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, lambdaC_mass_window, PermuVec[i], -1, -1, false, false, 15, 0);
+                        }
+                    }
+                   ///////////////////////////////////////////////////////////////////////////
+                   //RECONSTRUCTION: pi-pbar-k+(for anti_lambda_C)
+                   ///////////////////////////////////////////////////////////////////////////
+                   if(Dchannel_[15] == 1){
+                        std::vector< std::vector< std::pair<float, int> > > PermuVec;
+                        std::vector< std::pair<float, int> > InVec;
+                        std::pair<float, int> tk1 = std::make_pair(-PION_MASS, 0);
+                        std::pair<float, int> tk2 = std::make_pair(-PROTON_MASS, 0);
+                        std::pair<float, int> tk3 = std::make_pair(+KAON_MASS, 0);
+                        InVec.push_back(tk1);
+                        InVec.push_back(tk2);
+                        InVec.push_back(tk3);
+                        PermuVec = GetPermu(InVec);
+                        PermuVec = DelDuplicate(PermuVec);
+                        for(unsigned int i = 0; i < PermuVec.size(); i++){
+                            Dfinder::BranchOutNTk( DInfo, input_tracks, thePrimaryV, isNeededTrackIdx, D_counter, lambdaC_mass_window, PermuVec[i], -1, -1, false, false, 16, 0);
+                        }
+                     }
+                  
+                  
+
+
+
+
+
+
+
 
                     if(printInfo_){
                         printf("D_counter: ");
@@ -776,8 +826,10 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                             printf("%d/", D_counter[i]);
                         }
                         printf("\n");
+
                     }//}}}
                     //printf("-----*****DEBUG:End of DInfo.\n");
+
 
                     // TrackInfo section {{{
                     // Setup MVA
@@ -998,6 +1050,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     abs(it_gen->pdgId()) == 521 ||//B_+-
                     abs(it_gen->pdgId()) == 531 ||//B_s
                     abs(it_gen->pdgId()) == 130 ||//KL
+                    abs(it_gen->pdgId()) == 4122 ||//lamadac
                     //abs(it_gen->pdgId()) == 311 ||//K0
                     //abs(it_gen->pdgId()) == 321 ||//K+
                     //abs(it_gen->pdgId()) == 310 ||//KS
@@ -1015,7 +1068,8 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 if (
                     abs(int(it_gen->pdgId()/100) % 100) == 3  ||//s menson
                     abs(it_gen->pdgId()) == 111 || //pi0
-                    abs(it_gen->pdgId()) == 211 //pi+
+                    abs(it_gen->pdgId()) == 211 ||//pi+
+                    abs(it_gen->pdgId()) == 2212 //proton
                     ){
                     reco::GenParticle _deRef = (*it_gen);
                     reco::Candidate* Myself = dynamic_cast<reco::Candidate*>(&_deRef);
@@ -1154,6 +1208,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
             //printf("-----*****DEBUG:End of IndexToIgen\n");
             */
+
         }//isRealData}}}
         //printf("-----*****DEBUG:End of GenInfo.\n");
         //std::cout<<"Start to fill!\n";
@@ -1168,7 +1223,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
  
     //Made a Dntuple on the fly   
     if(makeDntuple_){
-        int isDchannel[14];
+        int isDchannel[16];
         isDchannel[0] = 1; //k+pi-
         isDchannel[1] = 1; //k-pi+
         isDchannel[2] = 1; //k-pi+pi+
@@ -1183,12 +1238,15 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         isDchannel[11] = 1;
         isDchannel[12] = 1; //B+(D0(k-pi+)pi+)
         isDchannel[13] = 1; //B-(D0(k-pi+)pi-)
+        isDchannel[14] = 1; //lambdaC(p+pi+k-)
+        isDchannel[15] = 1; //lambdaC(p-k+pi-)
         bool REAL = ((!iEvent.isRealData() && RunOnMC_) ? false:true);
-        Dntuple->makeDNtuple(isDchannel, REAL, doDntupleSkim_, &EvtInfo, &VtxInfo, &TrackInfo, &DInfo, &GenInfo, ntD1, ntD2, ntD3, ntD4, ntD5, ntD6, ntD7);
+        Dntuple->makeDNtuple(isDchannel, REAL, doDntupleSkim_, &EvtInfo, &VtxInfo, &TrackInfo, &DInfo, &GenInfo, ntD1, ntD2, ntD3, ntD4, ntD5, ntD6, ntD7, ntD8);
         if(!REAL) Dntuple->fillDGenTree(ntGen, &GenInfo);
     }
 
 }
+
 
 // ------------ method called once each job just after ending the event loop  ------------{{{
 void Dfinder::endJob()
@@ -1635,6 +1693,7 @@ void Dfinder::TkCombinationResFast(
     //std::cout<<"TkCombinationResFast, selectedTkhidxSet.size: "<<selectedTkhidxSet.size()<<std::endl;
 	return;
 }
+
 //}}}
 
 //BranchOutNTk{{{
