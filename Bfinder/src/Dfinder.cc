@@ -2050,7 +2050,7 @@ void Dfinder::BranchOutNTk(//input 2~4 tracks
             DInfo.rftk3_index[DInfo.size] = pushbackTrkIdx[2];
             if( fabs(tktk_4vecs[2].Mag()-PION_MASS) < fabs(tktk_4vecs[2].Mag()-KAON_MASS) ) DInfo.rftk3_MassHypo[DInfo.size] = 211;
             else DInfo.rftk3_MassHypo[DInfo.size] = 321;
-            if( fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-KAON_MASS) && fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-PION_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 2212;
+            if( fabs(tktk_4vecs[2].Mag()-PROTON_MASS) < fabs(tktk_4vecs[2].Mag()-KAON_MASS) && fabs(tktk_4vecs[2].Mag()-PROTON_MASS) < fabs(tktk_4vecs[2].Mag()-PION_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 2212;
         }
         if(tktkCands.size()>3){
             DInfo.rftk4_mass[DInfo.size]  = tktk_4vecs[3].Mag();
@@ -2060,7 +2060,7 @@ void Dfinder::BranchOutNTk(//input 2~4 tracks
             DInfo.rftk4_index[DInfo.size] = pushbackTrkIdx[3];
             if( fabs(tktk_4vecs[3].Mag()-PION_MASS) < fabs(tktk_4vecs[3].Mag()-KAON_MASS) ) DInfo.rftk4_MassHypo[DInfo.size] = 211;
             else DInfo.rftk4_MassHypo[DInfo.size] = 321;
-            if( fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-KAON_MASS) && fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-PION_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 2212;
+            if( fabs(tktk_4vecs[3].Mag()-PROTON_MASS) < fabs(tktk_4vecs[3].Mag()-KAON_MASS) && fabs(tktk_4vecs[3].Mag()-PROTON_MASS) < fabs(tktk_4vecs[3].Mag()-PION_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 2212;
         }
         if(tktkCands.size()>4){
             DInfo.rftk5_mass[DInfo.size]  = tktk_4vecs[4].Mag();
@@ -2070,7 +2070,7 @@ void Dfinder::BranchOutNTk(//input 2~4 tracks
             DInfo.rftk5_index[DInfo.size] = pushbackTrkIdx[4];
             if( fabs(tktk_4vecs[4].Mag()-PION_MASS) < fabs(tktk_4vecs[4].Mag()-KAON_MASS) ) DInfo.rftk5_MassHypo[DInfo.size] = 211;
             else DInfo.rftk5_MassHypo[DInfo.size] = 321;
-            if( fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-KAON_MASS) && fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-PION_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 2212;
+            if( fabs(tktk_4vecs[4].Mag()-PROTON_MASS) < fabs(tktk_4vecs[4].Mag()-KAON_MASS) && fabs(tktk_4vecs[4].Mag()-PROTON_MASS) < fabs(tktk_4vecs[4].Mag()-PION_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 2212;
         }
 
         DInfo.type[DInfo.size] = Dchannel_number;
