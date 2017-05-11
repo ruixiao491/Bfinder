@@ -72,6 +72,9 @@
 #define BZERO_MASS 5.27962
 #define BSUBS_MASS 5.36682
 #define LAMBDAC_MASS 2.286
+#define KSTAR892_MASS       //here I have nor added the mass for the following three.
+#define DELTA1232PLUSPLUS_MASS
+#define LAMBDA1520_MASS
 
 #define MUON_PDGID 13
 #define PION_PDGID 211
@@ -88,8 +91,15 @@
 #define DSTAR_PDGID 413
 #define PROTON_PDGID 2212
 #define LAMBDAC_PDGID 4122
+#define KSTAR892_PDGID 313
+#define DELTA1232PLUSPLUS_PDGID 2224 ///this value I am not sure.
+#define LAMBDA1520_PDGID  3122 ///this value I am not sure
+
+
+
 
 class EvtInfoBranches{ //{{{
+
 	public:
 		int	    RunNo;
 	    int	    EvtNo;
