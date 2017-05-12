@@ -1530,10 +1530,10 @@ class DntupleBranches
     ///here I add some lines
     else if((DInfo->type[j]==15||DInfo->type[j]==16)&& GenInfo->nDa[j]==2)
     {
-    DtktkResmass
-    if( fabs(DtktkResmass(j).Mag()-KSTAR892_MASS) < fabs(DtktkResmass(j).Mag()-DELTA1232PLUSPLUS_MASS) ) RpdgId=KSTAR892_PDGID;
+   
+    if( fabs(DInfo->tktkRes_mass[j]-KSTAR892_MASS) < fabs(DInfo->tktkRes_mass[j]-DELTA1232PLUSPLUS_MASS) ) RpdgId=KSTAR892_PDGID;
         else RpdgId=DELTA1232PLUSPLUS_PDGID;
-        if( fabs(DtktkResmass(j).Mag()-LAMBDA1520_MASS) < fabs(DtktkResmass(j).Mag()-KSTAR892_MASS) && fabs(DtktkResmass(j).Mag()-LAMBDA1520_MASS) < fabs(DtktkResmass(j).Mag()-DELTA1232PLUSPLUS_MASS) ) RpdgId=LAMBDA1520_PDGID;
+        if( fabs(DInfo->tktkRes_mass[j]-LAMBDA1520_MASS) < fabs(DInfo->tktkRes_mass[j]-KSTAR892_MASS) && fabs(DInfo->tktkRes_mass[j]-LAMBDA1520_MASS) < fabs(DInfo->tktkRes_mass[j]-DELTA1232PLUSPLUS_MASS) ) RpdgId=LAMBDA1520_PDGID;
     }
 
     Dgen[typesize] = 0;//gen init

@@ -72,9 +72,9 @@
 #define BZERO_MASS 5.27962
 #define BSUBS_MASS 5.36682
 #define LAMBDAC_MASS 2.286
-#define KSTAR892_MASS       //here I have nor added the mass for the following three.
-#define DELTA1232PLUSPLUS_MASS
-#define LAMBDA1520_MASS
+#define KSTAR892_MASS 0.89581      //here I have nor added the mass for the following three.
+#define DELTA1232PLUSPLUS_MASS 1.209 //I am not sure about this value
+#define LAMBDA1520_MASS 1.5195
 
 #define MUON_PDGID 13
 #define PION_PDGID 211
