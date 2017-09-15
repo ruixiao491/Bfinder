@@ -4,14 +4,24 @@ using namespace std;
 #include "format.h"
 #include "Dntuple.h"
 //here I change the skim option to true.
-Bool_t istest = false;
-int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb=true, Int_t startEntries=0, Int_t endEntries=-1, Bool_t skim=true, Bool_t gskim=true, Bool_t checkMatching=true, Bool_t iseos=false, Bool_t SkimHLTtree=false)
+//I also chane REAL option to true.
+Bool_t istest = true;
+int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb=false, Int_t startEntries=0, Int_t endEntries=-1, Bool_t skim=true, Bool_t gskim=true, Bool_t checkMatching=true, Bool_t iseos=false, Bool_t SkimHLTtree=true)
 {
   if(istest)
     {
-      infile="/data/HeavyFlavourRun2/temp/finder_pp.root";
-      outfile="/data/wangj/testspace/test_Dntuple_pp.root";
-      REAL=false;
+      //infile="/scratch/hammer/x/xiao147/deltaplusplus_crab_whole.root";
+	 // outfile="/scratch/hammer/x/xiao147/MC_privatesample_reconeff_test_result/deltaplusplus_test.root";
+	  //infile="/scratch/hammer/x/xiao147/kstar892crab_whole.root";
+	  //outfile="/scratch/hammer/x/xiao147/MC_privatesample_reconeff_test_result/kstar892.root";
+	 //infile="/scratch/hammer/x/xiao147/lambda1520crab/lambda1520_10.root";
+	  //infile="/scratch/hammer/x/xiao147/lambda1520crab_whole.root";
+	  //outfile="/scratch/hammer/x/xiao147/MC_privatesample_reconeff_test_result/lambda1520_test.root";
+      //infile="/scratch/hammer/x/xiao147/pkpi_crab_32.root";
+      infile="/home/xiao147/private/newchannel_lambda_CtoproduceDntuple/CMSSW_7_5_8_patch3/src/test/finder_test.root";
+	  outfile="test.root";
+      //outfile="test_lambda1520.root";
+	  REAL=false;
       isPbPb=false;
       skim=true;
       checkMatching=true;
@@ -74,7 +84,8 @@ int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb
   isDchannel[14] = 1; //lambdaC(p+k-pi+)
   isDchannel[15] = 1; //lambdaCbar(pbar-k+pi-)
   cout<<"--- Building trees"<<endl;
-  bool detailMode = true;
+//  bool detailMode = true;
+  bool detailMode=true;
   bool D0kpimode = true;
   TTree* ntD1 = new TTree("ntDkpi","");           Dntuple->buildDBranch(ntD1,D0kpimode,detailMode);
   D0kpimode = false;
@@ -102,12 +113,18 @@ int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb
   for(int i=startEntries;i<endEntries;i++)
     {
       root->GetEntry(i);
+//cout<<"entry"<<root->GetEntry(i)<<endl;
       hltroot->GetEntry(i);
       skimroot->GetEntry(i);
       hiroot->GetEntry(i);
       if(i%1000==0) cout<<setw(7)<<i<<" / "<<endEntries<<endl;
 //here I add one line like that in lambdaC to lambda pi channel to remove all the Dsize=0
-      if(DInfo->size==0)continue;
+//cout<<"RunNo"<<EvtInfo->RunNo<<endl;
+  //    if(DInfo->size==0)continue;//here I command this out, if run data, then I have to keep this filter.
+//cout<<"Dsize2"<<DInfo->size<<endl;
+//till this line, everything is fine.
+//cout<<"RunNo"<<EvtInfo->RunNo<<endl;
+//cout<<"PVxErr"<<EvtInfo->PVxE;
       if(checkMatching)
         {
           if(((int)Df_HLT_Event!=EvtInfo->EvtNo||(int)Df_HLT_Run!=EvtInfo->RunNo||(int)Df_HLT_LumiBlock!=EvtInfo->LumiNo) || 
@@ -120,10 +137,16 @@ int loop(TString infile="", TString outfile="", Bool_t REAL=false, Bool_t isPbPb
               continue;
             }
         }
+//cout<<"RunNo2"<<EvtInfo->RunNo<<endl;
+//cout<<"Dsize2"<<DInfo->size<<endl;
+//till this line, there seems that there is no problems.
+//cout<<"PVxErr"<<EvtInfo->PVxE;
+
       ntHlt->Fill();
       ntSkim->Fill();
       ntHi->Fill();
       Dntuple->makeDNtuple(isDchannel, REAL, skim, EvtInfo, VtxInfo, TrackInfo, DInfo, GenInfo, ntD1, ntD2, ntD3, ntD4, ntD5, ntD6, ntD7, ntD8);
+//      ntD8->ls();
       if(!REAL) Dntuple->fillDGenTree(ntGen, GenInfo, gskim);
     }
   outf->Write();
