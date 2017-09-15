@@ -948,7 +948,7 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                         if (!iEvent.isRealData() && RunOnMC_)
                             genTrackPtr [TrackInfo.size] = tk_it->genParticle();
-
+//cout<<"genTrack"<<genTrackPtr [TrackInfo.size]<<endl;
                         // Fill the same list for DInfo
                         for(unsigned int iCands=0; iCands < listOfRelativeDCand1.size(); iCands++){
                             DInfo.rftk1_index[listOfRelativeDCand1[iCands]-1] = TrackInfo.size;
@@ -1026,11 +1026,16 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
             for(std::vector<reco::GenParticle>::const_iterator it_gen=gens->begin();
                 it_gen != gens->end(); it_gen++){
+		//	cout<<"particles id "<<it_gen->pdgId()<<" , status = "<<it_gen->status()<<endl ;//I tested that the daughter particles are really in the list.
                 if (it_gen->status() > 2 && it_gen->status() != 8) continue;//only status 1, 2, 8(simulated)
                 if(GenInfo.size >= MAX_GEN){
                     fprintf(stderr,"ERROR: number of gens exceeds the size of array.\n");
                     break;;
                 }
+    /////
+	
+
+
 
                 /*
                 if (
@@ -1069,12 +1074,17 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                     abs(int(it_gen->pdgId()/100) % 100) == 3  ||//s menson
                     abs(it_gen->pdgId()) == 111 || //pi0
                     abs(it_gen->pdgId()) == 211 ||//pi+
-                    abs(it_gen->pdgId()) == 2212 //proton
+                    abs(it_gen->pdgId()) == 2212  ||//proton
+					abs(it_gen->pdgId()) == 321 || //K+ actually, I DO NOT need to add this,s meson is in the list
+					abs(it_gen->pdgId()) ==3124 || //lambda(1520)0
+					abs(it_gen->pdgId()) ==2224 //delta++
                     ){
                     reco::GenParticle _deRef = (*it_gen);
                     reco::Candidate* Myself = dynamic_cast<reco::Candidate*>(&_deRef);
                     //std::cout<<Myself->pdgId()<<"-----------"<<std::endl;
-                    isGenSignal = (Functs.GetAncestor(Myself, 5) | Functs.GetAncestor(Myself, 4));
+                  //  isGenSignal = (Functs.GetAncestor(Myself, 5) | Functs.GetAncestor(Myself, 4));
+				    isGenSignal = (Functs.GetAncestor(Myself, 41));
+				//	cout<<" isGenSignal "<<isGenSignal<<" ID "<<abs(it_gen->pdgId())<<endl;
                 }//all pi and K from b or c meson
 				
 				if( !isGenSignal && abs(it_gen->pdgId()) > 400 ){ //should be OK to require the PID > 400
@@ -1082,6 +1092,12 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 					reco::Candidate* Myself = dynamic_cast<reco::Candidate*>(&_deRef);
 					isGenSignal = Functs.GetDescendant(Myself, 4);
 				}//other particles (with pid > 400) have D meson in descendant chain
+                
+///////here I want to test///
+//if(abs(it_gen->pdgId())==4122){
+//	cout<<" isGenSignal "<< isGenSignal<<endl;
+//}
+///Till now there is no bugs.
 
                 if (!isGenSignal) continue;
 
@@ -1154,8 +1170,11 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             for(std::vector<const reco::Candidate *>::iterator sCands = sel_cands.begin();
                 sCands != sel_cands.end(); sCands++){
                 geninfo_idx = int(sCands-sel_cands.begin());
-                for(int nGenMo = 0; nGenMo < std::min(2,int((*sCands)->numberOfMothers())); nGenMo++){
-                //if((*sCands)->numberOfMothers()==1){
+				//cout<<" geninfo_idx "<<geninfo_idx<< " particle "<<(*sCands)->pdgId()<<endl;
+				//till now there should be no bugs.
+			 for(int nGenMo = 0; nGenMo < std::min(2,int((*sCands)->numberOfMothers())); nGenMo++){
+
+//if((*sCands)->numberOfMothers()==1){
                     for(std::vector<const reco::Candidate *>::iterator mCands = sel_cands.begin();
                     mCands != sel_cands.end(); mCands++){
                         if((*sCands)->mother(nGenMo) == *mCands){
@@ -1165,18 +1184,40 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                         }
                     }
                 }
+			//	cout<<" geninfo_idx "<<geninfo_idx<< " particle "<<(*sCands)->pdgId()<<" numbers "<<(*sCands)->numberOfDaughters()<<endl;
                 for(int nGenDa = 0; nGenDa < std::min(4,int((*sCands)->numberOfDaughters())); nGenDa++){
                     for(std::vector<const reco::Candidate *>::iterator mCands = sel_cands.begin();
                     mCands != sel_cands.end(); mCands++){
+						
+					//	cout<<" a "<<(*sCands)->daughter(nGenDa)<<" particle "<<(*sCands)->pdgId()<<endl;
+						if(abs((*sCands)->pdgId())==4122){
+                        //   cout<<" a "<<(*sCands)->daughter(nGenDa)<< " b "<<*mCands<<endl;
+						}
+
                         if((*sCands)->daughter(nGenDa) == *mCands){
+						//if((*sCands)->daughter(0)==*mCands){
                             if(nGenDa == 0) GenInfo.da1[geninfo_idx] = int(mCands-sel_cands.begin());
                             if(nGenDa == 1) GenInfo.da2[geninfo_idx] = int(mCands-sel_cands.begin());
                             if(nGenDa == 2) GenInfo.da3[geninfo_idx] = int(mCands-sel_cands.begin());
                             if(nGenDa == 3) GenInfo.da4[geninfo_idx] = int(mCands-sel_cands.begin());
+		              //  cout<< " geninfoinsidetheloop " << geninfo_idx <<endl;From the test here, it shows that lambdaC not in this loop.
+		            //    	cout<<"nGenDa"<<nGenDa<<"   da1 "<<GenInfo.da1[geninfo_idx]<<" geninfo_idx "<< geninfo_idx<<endl;
+						//	cout<<"nGenDa"<<nGenDa<<"   da2 "<<GenInfo.da2[geninfo_idx]<<" geninfo_idx "<< geninfo_idx<<endl;
+                        //    cout<<"nGenDa"<<nGenDa<<"   da3 "<<GenInfo.da3[geninfo_idx]<<" geninfo_idx "<< geninfo_idx<<endl;
+						//	cout<<"nGenDa"<<nGenDa<<"   da4 "<<GenInfo.da4[geninfo_idx]<<" geninfo_idx "<< geninfo_idx<<endl;
+							//std::cout << "mCands"<<mCands<<std::endl;
                         }
+						//cout<<"daupdgId"<<GenInfo.da1[geninfo_idx]<<endl;
                     }
                 }
             }
+			///here I add a few lines:
+			for(int igen = 0; igen < GenInfo.size; igen++){
+                 if (abs(GenInfo.pdgId[igen])==4122){
+
+			//	 cout<<"daupdgId "<<GenInfo.da1[igen]<<" dau2 "<<GenInfo.da2[igen]  <<endl;
+		          }
+		    }
             /*deprecated
             //Pass handle_index to igen
             for(int igen = 0; igen < GenInfo.size; igen++){
@@ -2021,6 +2062,11 @@ void Dfinder::BranchOutNTk(//input 2~4 tracks
         DInfo.rftk2_pt[DInfo.size]        = tktk_4vecs[1].Pt();
         DInfo.rftk2_eta[DInfo.size]       = tktk_4vecs[1].Eta();
         DInfo.rftk2_phi[DInfo.size]       = tktk_4vecs[1].Phi();
+        DInfo.rftk3_mass[DInfo.size]      = tktk_4vecs[2].Mag();
+		DInfo.rftk3_pt[DInfo.size]        = tktk_4vecs[2].Pt();
+		DInfo.rftk1_eta[DInfo.size]       = tktk_4vecs[2].Eta();
+		DInfo.rftk1_phi[DInfo.size]       = tktk_4vecs[2].Phi();
+		
 
         //Index initialize to -2
         DInfo.rftk1_index[DInfo.size] = -2;
