@@ -776,8 +776,9 @@ void Dfinder::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                    ///////////////////////////////////////////////////////////////////////////
                    //RECONSTRUCTION: pi+p+k-(for lambda_C)
                    ///////////////////////////////////////////////////////////////////////////
-                   float lambdaC_mass_window[2] = {LAMBDAC_MASS-0.3,LAMBDAC_MASS+0.3};
-                   if(Dchannel_[14] == 1){
+                  float lambdaC_mass_window[2] = {LAMBDAC_MASS-0.3,LAMBDAC_MASS+0.3};
+                 // float lambdaC_mass_window[2] = {0,10};
+				  if(Dchannel_[14] == 1){
                         std::vector< std::vector< std::pair<float, int> > > PermuVec;
                         std::vector< std::pair<float, int> > InVec;
                         std::pair<float, int> tk1 = std::make_pair(+PION_MASS, 0);
@@ -2064,9 +2065,9 @@ void Dfinder::BranchOutNTk(//input 2~4 tracks
         DInfo.rftk2_phi[DInfo.size]       = tktk_4vecs[1].Phi();
         DInfo.rftk3_mass[DInfo.size]      = tktk_4vecs[2].Mag();
 		DInfo.rftk3_pt[DInfo.size]        = tktk_4vecs[2].Pt();
-		DInfo.rftk1_eta[DInfo.size]       = tktk_4vecs[2].Eta();
-		DInfo.rftk1_phi[DInfo.size]       = tktk_4vecs[2].Phi();
-		
+		DInfo.rftk3_eta[DInfo.size]       = tktk_4vecs[2].Eta();
+		DInfo.rftk3_phi[DInfo.size]       = tktk_4vecs[2].Phi();
+//	cout<<"1mass:"<<DInfo.rftk1_mass[DInfo.size]<<" 2mass:"<<DInfo.rftk2_mass[DInfo.size]<<" 3mass:"<<DInfo.rftk3_mass[DInfo.size]<<endl;	
 
         //Index initialize to -2
         DInfo.rftk1_index[DInfo.size] = -2;
@@ -2077,17 +2078,26 @@ void Dfinder::BranchOutNTk(//input 2~4 tracks
 
         DInfo.rftk1_index[DInfo.size]     = pushbackTrkIdx[0];
         DInfo.rftk2_index[DInfo.size]     = pushbackTrkIdx[1];
-
+cout<<"1mass:"<<DInfo.rftk1_mass[DInfo.size]<<" 2mass:"<<DInfo.rftk2_mass[DInfo.size]<<" 3mass:"<<DInfo.rftk3_mass[DInfo.size]<<endl;
         //document the mass hypothesis
-        if( fabs(tktk_4vecs[0].Mag()-PION_MASS) < fabs(tktk_4vecs[0].Mag()-KAON_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 211;
+		//cout<<"pion: "<<tktk_4vecs[0].Mag()-PION_MASS<<"kaon: " <<tktk_4vecs[0].Mag()-KAON_MASS<<endl;
+        if( fabs(tktk_4vecs[0].Mag()-PION_MASS) < fabs(tktk_4vecs[0].Mag()-KAON_MASS) ) 
+		{DInfo.rftk1_MassHypo[DInfo.size] = 211;
+		//cout<<"diff_pion"<<tktk_4vecs[0].Mag()-PION_MASS<<"diff_kaon: " <<tktk_4vecs[0].Mag()-KAON_MASS<<endl;
+		}
         else DInfo.rftk1_MassHypo[DInfo.size] = 321;
-        if( fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-KAON_MASS) && fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-PION_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 2212;
-        //If its a Res particle, save it as D0
+		//cout<<" diffp : "<<tktk_4vecs[0].Mag()-PROTON_MASS<<" diffk : "<<tktk_4vecs[0].Mag()-KAON_MASS<<" diffpi :"<<tktk_4vecs[0].Mag()-PION_MASS<<endl;
+        if( fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-KAON_MASS) && fabs(tktk_4vecs[0].Mag()-PROTON_MASS) < fabs(tktk_4vecs[0].Mag()-PION_MASS) )
+		{
+			DInfo.rftk1_MassHypo[DInfo.size] = 2212;
+        }
+		//If its a Res particle, save it as D0
         if( DInfo.rftk1_index[DInfo.size] == -1) DInfo.rftk1_MassHypo[DInfo.size] = 421;
-
+        //cout<<" pid1: "<<DInfo.rftk1_MassHypo[DInfo.size]<<endl;
         if( fabs(tktk_4vecs[1].Mag()-PION_MASS) < fabs(tktk_4vecs[1].Mag()-KAON_MASS) ) DInfo.rftk2_MassHypo[DInfo.size] = 211;
         else DInfo.rftk2_MassHypo[DInfo.size] = 321;
-        if( fabs(tktk_4vecs[1].Mag()-PROTON_MASS) < fabs(tktk_4vecs[1].Mag()-KAON_MASS) && fabs(tktk_4vecs[1].Mag()-PROTON_MASS) < fabs(tktk_4vecs[1].Mag()-PION_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 2212;
+        if( fabs(tktk_4vecs[1].Mag()-PROTON_MASS) < fabs(tktk_4vecs[1].Mag()-KAON_MASS) && fabs(tktk_4vecs[1].Mag()-PROTON_MASS) < fabs(tktk_4vecs[1].Mag()-PION_MASS) ) DInfo.rftk2_MassHypo[DInfo.size] = 2212;
+		
         if(tktkCands.size()>2){
             DInfo.rftk3_mass[DInfo.size]  = tktk_4vecs[2].Mag();
             DInfo.rftk3_pt[DInfo.size]    = tktk_4vecs[2].Pt();
@@ -2096,8 +2106,10 @@ void Dfinder::BranchOutNTk(//input 2~4 tracks
             DInfo.rftk3_index[DInfo.size] = pushbackTrkIdx[2];
             if( fabs(tktk_4vecs[2].Mag()-PION_MASS) < fabs(tktk_4vecs[2].Mag()-KAON_MASS) ) DInfo.rftk3_MassHypo[DInfo.size] = 211;
             else DInfo.rftk3_MassHypo[DInfo.size] = 321;
-            if( fabs(tktk_4vecs[2].Mag()-PROTON_MASS) < fabs(tktk_4vecs[2].Mag()-KAON_MASS) && fabs(tktk_4vecs[2].Mag()-PROTON_MASS) < fabs(tktk_4vecs[2].Mag()-PION_MASS) ) DInfo.rftk1_MassHypo[DInfo.size] = 2212;
+            if( fabs(tktk_4vecs[2].Mag()-PROTON_MASS) < fabs(tktk_4vecs[2].Mag()-KAON_MASS) && fabs(tktk_4vecs[2].Mag()-PROTON_MASS) < fabs(tktk_4vecs[2].Mag()-PION_MASS) ) DInfo.rftk3_MassHypo[DInfo.size] = 2212;
         }
+		//cout<<"final :"<<DInfo.rftk1_MassHypo[DInfo.size]<<endl;
+	//	cout<<"1 :" <<DInfo.rftk1_MassHypo[DInfo.size]<<" 2:"<<DInfo.rftk2_MassHypo[DInfo.size]<<" 3:"<<DInfo.rftk3_MassHypo[DInfo.size]<<endl;
         if(tktkCands.size()>3){
             DInfo.rftk4_mass[DInfo.size]  = tktk_4vecs[3].Mag();
             DInfo.rftk4_pt[DInfo.size]    = tktk_4vecs[3].Pt();
